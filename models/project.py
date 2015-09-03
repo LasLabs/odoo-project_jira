@@ -43,7 +43,7 @@ class ProjectJiraOauth(models.Model):
     def _compute_rsa_key_vals(self, ):
         ''' Create public/private RSA keypair   '''
         private = RSA.generate(self.RSA_BITS)
-        self.public_key = public = private.publickey().exportKey()
+        self.public_key = private.publickey().exportKey()
         self.private_key = private.exportKey()
 
     consumer_key = fields.Char(default=_compute_consumer_key_val, readonly=True)
@@ -54,8 +54,12 @@ class ProjectJiraOauth(models.Model):
     request_secret = fields.Char(readonly=True)
     auth_uri = fields.Char(readonly=True)
     
-    company_id = fields.Many2one('res.company', readonly=True)
-    uri = fields.Char(related='company_id.jira_uri', readonly=True)
+    access_token = fields.Char(readonly=True)
+    access_secret = fields.Char(readonly=True)
+    
+    company_id = fields.Many2one('res.company')
+    project_ids = fields.Many2one('project.jira.project')
+    uri = fields.Char()
     
     def _do_oauth_leg_1(self, ):
         ''' Perform OAuth step1 to get req_token, req_secret, and auth_uri '''
@@ -78,13 +82,16 @@ class ProjectJiraOauth(models.Model):
             raise KeyError('Did not get token (%s) or secret (%s). Resp %s',
                            token, secret, resp)
         
-        self.request_token, self.request_secret = token, secret
-        self.auth_uri = '%s/%s/authorize?oauth_token=%s' % (
-            self.uri, self.OAUTH_BASE
-        )
+        self.write({
+            'request_token': token,
+            'request_secret': secret,
+            'auth_uri': '%s/%s/authorize?oauth_token=%s' % (
+                self.uri, self.OAUTH_BASE
+            ),
+        })
         
     def _do_oauth_leg_3(self, ):
-        ''' Perform OAuth step 3 to '''
+        ''' Perform OAuth step 3 to get access_token and secret '''
         
         oauth_hook = OAuthHook(
             consumer_key=self.consumer_key, consumer_secret='',
@@ -105,12 +112,28 @@ class ProjectJiraOauth(models.Model):
             raise KeyError('Did not get token (%s) or secret (%s). Resp %s',
                            token, secret, resp)
         
-        self.access_token, self.access_secret = token, secret
-
+        self.write({
+            'access_token': token,
+            'access_secret': secret,
+        })
+        
+    @api.model
+    def create(self, vals):
+        ''' Hook into create, start oauth process & validate '''
+        rec = super(ProjectJiraOauth, self).create(vals)
+        rec._do_oauth_leg_1()
+        
+    @api.one
+    def write(self, vals):
+        ''' Hook into write, update oauth on URI change '''
+        super(ProjectJiraOauth, self).write(vals)
+        if vals.get('uri'):
+            self._do_oauth_leg_1()
+            
 
 class ProjectJiraProject(models.Model):
     _name = 'project.jira.project'
-    company_id = fields.Many2one('res.company')
+    jira_id = fields.One2many('project.jira.oauth')
     project_ids = fields.One2many('project.project')
 
 
@@ -121,4 +144,8 @@ class ProjectProject(models.Model):
 
 class ProjectTask(models.Model):
     _inherit = 'project.task'
-    
+
+
+class ResCompany(models.Model):
+    _name = 'res.company'
+    jira_oauth_ids = fields.One2many('project.jira.oauth')

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    Copyright (C) 2014-2015 LasLabs [https://laslabs.com]
+    @author Dave Lasley <dave@laslabs.com>
+    The licence is in the file __openerp__.py
+-->
+
+<openerp>
+<data>
+
+<record model="ir.ui.view" id='create_jira_oauth_wizard'>
+    <field name='name'>create.jira.oauth.wizard</field>
+    <field name='model'>project.jira.oauth</field>
+    <field name='inherit_id' ref='odoo-customizations.wizard_create_location_move'/>
+    <field name='arch' type='xml'>
+        <xpath expr='//field[@name="deliver_location_id"]' position='after'>
+            <field name='onsite_contact_id' string='On-Site Contact'
+                   domain="[('is_location', '=', False), ('is_company', '=', False)]"/>
+        </xpath>
+    </field>
+</record>
+
+</data>
+</openerp>
