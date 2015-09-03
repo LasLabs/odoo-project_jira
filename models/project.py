@@ -1,0 +1,124 @@
+# -*- coding: utf-8 -*-
+##############################################################################
+#
+#    Author: Dave Lasley <dave@laslabs.com>
+#    Copyright: 2015 LasLabs, Inc.
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as
+#    published by the Free Software Foundation, either version 3 of the
+#    License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+##############################################################################
+from openerp import models, fields, api
+from os import urandom
+from jira.packages.requests_oauth.hook import OAuthHook
+from Crypto.PublicKey import RSA
+from urlparse import parse_qsl
+import requests
+
+
+class ProjectJiraOauth(models.Model):
+    ''' Handle OAuth for Jira '''
+    _name = 'project.jira.oauth'
+    
+    RSA_BITS = 4096
+    KEY_LEN = 256
+    OAUTH_BASE = 'plugins/servlet/oauth'
+    REST_VER = '2'
+    REST_BASE = 'rest/api'
+    
+    def _compute_consumer_key_val(self, ):
+        ''' Generate a rnd consumer key of length self.KEY_LEN '''
+        self.consumer_key = urandom(self.KEY_LEN).encode('hex')
+
+    def _compute_rsa_key_vals(self, ):
+        ''' Create public/private RSA keypair   '''
+        private = RSA.generate(self.RSA_BITS)
+        self.public_key = public = private.publickey().exportKey()
+        self.private_key = private.exportKey()
+
+    consumer_key = fields.Char(default=_compute_consumer_key_val, readonly=True)
+    private_key = fields.Char(default=_compute_rsa_key_vals, readonly=True)
+    public_key = fields.Char(readonly=True)
+    
+    request_token = fields.Char(readonly=True)
+    request_secret = fields.Char(readonly=True)
+    auth_uri = fields.Char(readonly=True)
+    
+    company_id = fields.Many2one('res.company', readonly=True)
+    uri = fields.Char(related='company_id.jira_uri', readonly=True)
+    
+    def _do_oauth_leg_1(self, ):
+        ''' Perform OAuth step1 to get req_token, req_secret, and auth_uri '''
+        
+        oauth_hook = OAuthHook(
+            consumer_key=self.consumer_key, consumer_secret='',
+            key_cert = self.private_key, header_auth=True
+        )
+        req = requests.post(
+            '%s/%s/request-token' % (self.uri, self.OAUTH_BASE),
+            verify=self.uri.startswith('https'),
+            hooks={'pre_request': oauth_hook}
+        )
+        resp = dict(parse_qsl(req.text))
+        
+        token = resp.get('oauth_token', False)
+        secret = resp.get('oauth_token_secret', False)
+        
+        if False in [token, secret]:
+            raise KeyError('Did not get token (%s) or secret (%s). Resp %s',
+                           token, secret, resp)
+        
+        self.request_token, self.request_secret = token, secret
+        self.auth_uri = '%s/%s/authorize?oauth_token=%s' % (
+            self.uri, self.OAUTH_BASE
+        )
+        
+    def _do_oauth_leg_3(self, ):
+        ''' Perform OAuth step 3 to '''
+        
+        oauth_hook = OAuthHook(
+            consumer_key=self.consumer_key, consumer_secret='',
+            access_token=self.request_token,
+            access_token_secret=self.request_secret,
+            key_cert=self.private_key, header_auth=True 
+        )
+        req = requests.post(
+            '%s/%s/access-token' % (self.uri, self.OAUTH_BASE),
+            hooks={'pre_request': oauth_hook}
+        )
+        resp = dict(parse_qsl(req.text))
+        
+        token = resp.get('oauth_token', False)
+        secret = resp.get('oauth_token_secret', False)
+        
+        if False in [token, secret]:
+            raise KeyError('Did not get token (%s) or secret (%s). Resp %s',
+                           token, secret, resp)
+        
+        self.access_token, self.access_secret = token, secret
+
+
+class ProjectJiraProject(models.Model):
+    _name = 'project.jira.project'
+    company_id = fields.Many2one('res.company')
+    project_ids = fields.One2many('project.project')
+
+
+class ProjectProject(models.Model):
+    _inherit = 'project.project'
+    jira_project_id = fields.Many2one('project.jira.project')
+
+
+class ProjectTask(models.Model):
+    _inherit = 'project.task'
+    
