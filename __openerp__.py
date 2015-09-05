@@ -19,7 +19,7 @@
 #
 ##############################################################################
 {
-    'name': 'Sync module for Jira tasks',
+    'name': 'Sync Module for Jira',
     'version': '0.1',
     'category': '',
     'author': "LasLabs",
@@ -31,7 +31,8 @@
         'project_issue_timesheet',
     ],
     'data': [
-        
+        'views/project_jira_view.xml',
+        'wizards/create_jira_link_wizard_view.xml',
     ],
     'installable': True,
     'application': True,

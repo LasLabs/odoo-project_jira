@@ -14,10 +14,13 @@
     <field name='model'>project.jira.oauth</field>
     <field name='inherit_id' ref='odoo-customizations.wizard_create_location_move'/>
     <field name='arch' type='xml'>
-        <xpath expr='//field[@name="deliver_location_id"]' position='after'>
-            <field name='onsite_contact_id' string='On-Site Contact'
-                   domain="[('is_location', '=', False), ('is_company', '=', False)]"/>
-        </xpath>
+        <group>
+            <field name='auth_uri' string='Visit This URI, Authorize, Then Click Continue' readonly='True'/>
+        </group>
+        <footer>
+            <button special='cancel' string='Cancel'/>
+            <button name='_do_oauth_leg_3' type='object' string='Continue (Only After Above Authorization)' class='oe_highlight'/>
+        </footer>
     </field>
 </record>
 

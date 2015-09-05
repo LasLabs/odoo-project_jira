@@ -32,9 +32,14 @@ class ProjectJiraOauthWizard(models.TransientModel):
     _description = 'Second leg of Oauth Dance'
     
     def _default_session(self, ):
-        self.env['project.jira.oauth'].browse(self._context.get('active_id'))
+        return self.env['project.jira.oauth'].browse(self._context.get('active_id'))
     
-    @api.one
-    def _do_oauth_leg_2(self, ):
+    
+    oauth_id = fields.Many2one('project.jira.oauth', required=True,
+                               default=_default_session)
+    
+    @api.model
+    def _do_oauth_leg_3(self, ):
         ''' '''
-        self.env['']
+        self.oauth_id._do_oauth_leg_3()
+        return {'type': 'ir.actions.act_window_close'}
