@@ -36,18 +36,13 @@ class ProjectJiraOauth(models.Model):
     REST_VER = '2'
     REST_BASE = 'rest/api'
     
-    def _compute_consumer_key_val(self, ):
+    def __compute_default_consumer_key_val(self, ):
         ''' Generate a rnd consumer key of length self.KEY_LEN '''
-        self.consumer_key = urandom(self.KEY_LEN).encode('hex')
+        return urandom(self.KEY_LEN).encode('hex')
 
-    def _compute_rsa_key_vals(self, ):
-        ''' Create public/private RSA keypair   '''
-        private = RSA.generate(self.RSA_BITS)
-        self.public_key = private.publickey().exportKey()
-        self.private_key = private.exportKey()
-
-    consumer_key = fields.Char(default=_compute_consumer_key_val, readonly=True)
-    private_key = fields.Char(default=_compute_rsa_key_vals, readonly=True)
+    consumer_key = fields.Char(default=__compute_default_consumer_key_val,
+                               readonly=True)
+    private_key = fields.Char(readonly=True)
     public_key = fields.Char(readonly=True)
     
     request_token = fields.Char(readonly=True)
@@ -61,9 +56,17 @@ class ProjectJiraOauth(models.Model):
     project_ids = fields.Many2one('project.jira.project')
     uri = fields.Char()
     
+    @api.one
+    def __create_rsa_key_vals(self, ):
+        ''' Create public/private RSA keypair   '''
+        private = RSA.generate(self.RSA_BITS)
+        self.public_key = private.publickey().exportKey()
+        self.private_key = private.exportKey()
+    
     def _do_oauth_leg_1(self, ):
         ''' Perform OAuth step1 to get req_token, req_secret, and auth_uri '''
         
+        self.__create_rsa_key_vals() #< Gen new keypairs
         oauth_hook = OAuthHook(
             consumer_key=self.consumer_key, consumer_secret='',
             key_cert = self.private_key, header_auth=True
@@ -141,11 +144,11 @@ class ProjectProject(models.Model):
     _inherit = 'project.project'
     jira_project_id = fields.Many2one('project.jira.project')
 
-
-class ProjectTask(models.Model):
-    _inherit = 'project.task'
+# 
+# class ProjectTask(models.Model):
+#     _inherit = 'project.task'
 
 
 class ResCompany(models.Model):
-    _name = 'res.company'
+    _inherit = 'res.company'
     jira_oauth_ids = fields.One2many('project.jira.oauth')
