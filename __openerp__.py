@@ -28,7 +28,6 @@
     'depends': [
         'project',
         'project_issue',
-        'project_issue_timesheet',
     ],
     'data': [
         'views/project_jira_view.xml',
