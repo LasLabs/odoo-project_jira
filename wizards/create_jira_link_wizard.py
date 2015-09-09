@@ -20,7 +20,6 @@
 ##############################################################################
 from openerp import models, fields, api
 from os import urandom
-from jira.packages.requests_oauth.hook import OAuthHook
 from Crypto.PublicKey import RSA
 from urlparse import parse_qsl
 import requests
