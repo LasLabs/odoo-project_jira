@@ -29,6 +29,7 @@ import requests
 class ProjectJiraOauth(models.Model):
     ''' Handle OAuth for Jira '''
     _name = 'project.jira.oauth'
+    _description = 'Handles OAuth Logic For Jira Project'
     
     RSA_BITS = 4096
     KEY_LEN = 256
@@ -53,7 +54,7 @@ class ProjectJiraOauth(models.Model):
     access_secret = fields.Char(readonly=True)
     
     company_id = fields.Many2one('res.company')
-    project_ids = fields.Many2one('project.project')
+    jira_project_ids = fields.Many2one('project.jira.project', 'jira_id')
     uri = fields.Char()
     
     @api.one
@@ -133,10 +134,16 @@ class ProjectJiraOauth(models.Model):
         if vals.get('uri'):
             self._do_oauth_leg_1()
             
+            
+class ProjectJiraProject(models.Model):
+    _name = 'project.jira.project'
+    jira_id = fields.One2many('project.jira.oauth', 'jira_project_ids')
+    project_ids = fields.One2many('project.project', 'jira_project_id')
+
 
 class ProjectProject(models.Model):
     _inherit = 'project.project'
-    jira_id = fields.One2many('project.jira.oauth')
+    jira_project_id = fields.Many2one('project.jira.project', 'project_ids')
 
 # 
 # class ProjectTask(models.Model):
