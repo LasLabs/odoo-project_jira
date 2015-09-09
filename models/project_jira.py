@@ -53,7 +53,7 @@ class ProjectJiraOauth(models.Model):
     access_secret = fields.Char(readonly=True)
     
     company_id = fields.Many2one('res.company')
-    project_ids = fields.Many2one('project.jira.project')
+    project_ids = fields.Many2one('project.project')
     uri = fields.Char()
     
     @api.one
@@ -134,15 +134,9 @@ class ProjectJiraOauth(models.Model):
             self._do_oauth_leg_1()
             
 
-class ProjectJiraProject(models.Model):
-    _name = 'project.jira.project'
-    jira_id = fields.One2many('project.jira.oauth')
-    project_ids = fields.One2many('project.project')
-
-
 class ProjectProject(models.Model):
     _inherit = 'project.project'
-    jira_project_id = fields.Many2one('project.jira.project')
+    jira_id = fields.One2many('project.jira.oauth')
 
 # 
 # class ProjectTask(models.Model):
