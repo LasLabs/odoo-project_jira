@@ -28,14 +28,36 @@ import requests
 class ProjectJiraOauthWizard(models.TransientModel):
     ''' Handle OAuth for Jira '''
     _name = 'project.jira.oauth.wizard'
-    _description = 'Second leg of Oauth Dance'
+    _description = 'Wizard to create connection and perform Oauth dance'
     
-    def _default_session(self, ):
+    def _compute_default_session(self, ):
         return self.env['project.jira.oauth'].browse(self._context.get('active_id'))
     
+    def _compute_default_auth_uri(self, ):
+        return self._compute_default_session().auth_uri
     
-    oauth_id = fields.Many2one('project.jira.oauth', required=True,
-                               default=_default_session)
+    oauth_id = fields.Many2one('project.jira.oauth',
+                               default=_compute_default_session)
+    auth_uri = fields.Char(default=_compute_default_auth_uri)
+    name = fields.Char()
+    uri = fields.Char()
+    
+    @api.model
+    def _do_oauth_leg_1(self, ):
+        ''' '''
+        self.oauth_id = self.env['project.jira.oauth'].create({
+            'name': name,
+            'uri': uri,
+        })
+        return {
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'project.jira.oauth.wizard',
+            'view_id': False,
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'context': self._context,
+        }
     
     @api.model
     def _do_oauth_leg_3(self, ):

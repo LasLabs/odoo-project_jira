@@ -12,15 +12,33 @@
 <record model="ir.ui.view" id='create_jira_oauth_wizard'>
     <field name='name'>create.jira.oauth.wizard</field>
     <field name='model'>project.jira.oauth</field>
-    <field name='inherit_id' ref='odoo-customizations.wizard_create_location_move'/>
     <field name='arch' type='xml'>
-        <group>
-            <field name='auth_uri' string='Visit This URI, Authorize, Then Click Continue' readonly='True'/>
-        </group>
-        <footer>
-            <button special='cancel' string='Cancel'/>
-            <button name='_do_oauth_leg_3' type='object' string='Continue (Only After Above Authorization)' class='oe_highlight'/>
-        </footer>
+        <form string='Create OAuth Connection'>
+            <group>
+                <field name='name' string='Name of instance'/>
+                <field name='uri' string='Base URI of JIRA Instance (e.g. https://example.com/jira)'/>
+            </group>
+            <footer>
+                <button special='cancel' string='Cancel'/>
+                <button name='_do_oauth_leg_1' type='object' string='Create' class='oe_highlight'/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+<record model="ir.ui.view" id='authorize_jira_oauth_wizard'>
+    <field name='name'>authorize.jira.oauth.wizard</field>
+    <field name='model'>project.jira.oauth</field>
+    <field name='arch' type='xml'>
+        <form string='Authorize OAuth (Leg 2)'>
+            <group>
+                <field name='auth_uri' string='Visit This URI, Authorize, Then Click Continue' readonly='True'/>
+            </group>
+            <footer>
+                <button special='cancel' string='Cancel'/>
+                <button name='_do_oauth_leg_3' type='object' string='Continue (Only After Above Authorization)' class='oe_highlight'/>
+            </footer>
+        </form>
     </field>
 </record>
 

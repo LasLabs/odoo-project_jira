@@ -56,6 +56,7 @@ class ProjectJiraOauth(models.Model):
     company_id = fields.Many2one('res.company')
     jira_project_ids = fields.Many2one('project.jira.project')
     uri = fields.Char()
+    name = fields.Char()
     
     @api.one
     def __create_rsa_key_vals(self, ):
