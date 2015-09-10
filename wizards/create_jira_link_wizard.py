@@ -36,8 +36,18 @@ class ProjectJiraOauthWizard(models.TransientModel):
     def _compute_default_auth_uri(self, ):
         return self._compute_default_session().auth_uri
     
+    def _compute_default_company(self, ):
+        return self.env.user.company_id
+    
     oauth_id = fields.Many2one('project.jira.oauth',
                                default=_compute_default_session)
+    company_id = fields.Many2one('res.company',
+                                 default=_compute_default_company)
+    state = fields.Selection([
+        ('new', 'New Creation'),
+        ('leg_2', 'OAuth Authorization'),
+        ('done', 'Complete')
+    ])
     auth_uri = fields.Char(default=_compute_default_auth_uri)
     name = fields.Char()
     uri = fields.Char()
@@ -46,14 +56,17 @@ class ProjectJiraOauthWizard(models.TransientModel):
     def _do_oauth_leg_1(self, ):
         ''' '''
         self.oauth_id = self.env['project.jira.oauth'].create({
-            'name': name,
-            'uri': uri,
+            'name': self.name,
+            'uri': self.uri,
+            'company_id': self.company_id,
         })
+        self.state = 'leg_2'
         return {
             'view_type': 'form',
             'view_mode': 'form',
+            'views': [(False, 'form')],
             'res_model': 'project.jira.oauth.wizard',
-            'view_id': False,
+            'res_id': self.id,
             'type': 'ir.actions.act_window',
             'target': 'new',
             'context': self._context,
@@ -63,4 +76,5 @@ class ProjectJiraOauthWizard(models.TransientModel):
     def _do_oauth_leg_3(self, ):
         ''' '''
         self.oauth_id._do_oauth_leg_3()
+        self.state = 'done'
         return {'type': 'ir.actions.act_window_close'}

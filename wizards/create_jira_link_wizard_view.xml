@@ -9,11 +9,14 @@
 <openerp>
 <data>
 
-<record model="ir.ui.view" id='create_jira_oauth_wizard'>
-    <field name='name'>create.jira.oauth.wizard</field>
+<record model="ir.ui.view" id='project_jira_oauth_wizard'>
+    <field name='name'>authorize.jira.oauth.wizard</field>
     <field name='model'>project.jira.oauth</field>
     <field name='arch' type='xml'>
-        <form string='Create OAuth Connection'>
+        
+        <field invisible='1' name='state'/>
+        
+        <form string='Create OAuth Connection' states='new'>
             <group>
                 <field name='name' string='Name of instance'/>
                 <field name='uri' string='Base URI of JIRA Instance (e.g. https://example.com/jira)'/>
@@ -23,14 +26,8 @@
                 <button name='_do_oauth_leg_1' type='object' string='Create' class='oe_highlight'/>
             </footer>
         </form>
-    </field>
-</record>
-
-<record model="ir.ui.view" id='authorize_jira_oauth_wizard'>
-    <field name='name'>authorize.jira.oauth.wizard</field>
-    <field name='model'>project.jira.oauth</field>
-    <field name='arch' type='xml'>
-        <form string='Authorize OAuth (Leg 2)'>
+        
+        <form string='Authorize OAuth (Leg 2)' states='leg_2'>
             <group>
                 <field name='auth_uri' string='Visit This URI, Authorize, Then Click Continue' readonly='True'/>
             </group>
@@ -39,6 +36,11 @@
                 <button name='_do_oauth_leg_3' type='object' string='Continue (Only After Above Authorization)' class='oe_highlight'/>
             </footer>
         </form>
+        
+        <form string='Authorize OAuth (Leg 2)' states='leg_2'>
+            <h2>OAuth has already been configured.</h2>
+        </form>
+        
     </field>
 </record>
 
