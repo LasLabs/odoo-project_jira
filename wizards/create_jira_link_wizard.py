@@ -31,17 +31,14 @@ class ProjectJiraOauthWizard(models.TransientModel):
     _description = 'Wizard to create connection and perform Oauth dance'
     
     def _compute_default_session(self, ):
-        return self.env['project.jira.oauth'].browse(self._context.get('active_id'))
+        return self.env['res.company'].browse(self._context.get('active_id'))
     
     def _compute_default_auth_uri(self, ):
-        return self._compute_default_session().auth_uri
-    
-    def _compute_default_company(self, ):
-        return self.env.user.company_id
+        return self.oauth_id.auth_uri
     
     oauth_id = fields.Many2one('project.jira.oauth')
     company_id = fields.Many2one('res.company',
-                                 default=_compute_default_company)
+                                 default=_compute_default_session)
     state = fields.Selection([
         ('new', 'New Creation'),
         ('leg_2', 'OAuth Authorization'),
@@ -50,15 +47,18 @@ class ProjectJiraOauthWizard(models.TransientModel):
     auth_uri = fields.Char(related='oauth_id.auth_uri')
     name = fields.Char()
     uri = fields.Char()
+    verify = fields.Boolean(string='Verify SSL?', default=True)
     
-    @api.model
+    @api.one
     def do_oauth_leg_1(self, ):
         ''' '''
         oauth_id = self.env['project.jira.oauth'].create({
             'name': self.name,
             'uri': self.uri,
-            'company_id': self.company_id,
+            'company_id': self.company_id.id,
+            'verify': self.verify
         })
+        
         self.write({
             'state': 'leg_2',
             'oauth_id': oauth_id,
@@ -75,7 +75,7 @@ class ProjectJiraOauthWizard(models.TransientModel):
             'context': self._context,
         }
     
-    @api.model
+    @api.one
     def do_oauth_leg_3(self, ):
         ''' '''
         self.oauth_id._do_oauth_leg_3()

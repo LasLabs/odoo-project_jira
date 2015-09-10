@@ -1,4 +1,5 @@
+oauthlib
 requests
-requests-oauth
+requests-oauthlib
 jira
 pycrypto

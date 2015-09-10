@@ -20,7 +20,8 @@
 ##############################################################################
 from openerp import models, fields, api
 from os import urandom
-from oauth_hook import OAuthHook
+from oauthlib.oauth1 import SIGNATURE_RSA
+from requests_oauthlib import OAuth1
 from Crypto.PublicKey import RSA
 from urlparse import parse_qsl
 import requests
@@ -57,6 +58,7 @@ class ProjectJiraOauth(models.Model):
     jira_project_ids = fields.Many2one('project.jira.project')
     uri = fields.Char()
     name = fields.Char()
+    verify_ssl = fields.Boolean(default=True)
     
     @api.one
     def __create_rsa_key_vals(self, ):
@@ -70,14 +72,13 @@ class ProjectJiraOauth(models.Model):
         ''' Perform OAuth step1 to get req_token, req_secret, and auth_uri '''
         
         self.__create_rsa_key_vals() #< Gen new keypairs
-        oauth_hook = OAuthHook(
-            consumer_key=self.consumer_key, consumer_secret='',
-            key_cert = self.private_key, header_auth=True
+        oauth_hook = OAuth1(
+            client_key=self.consumer_key, client_secret='',
+            signature_method=SIGNATURE_RSA, rsa_key=self.private_key,
         )
         req = requests.post(
             '%s/%s/request-token' % (self.uri, self.OAUTH_BASE),
-            verify=self.uri.startswith('https'),
-            hooks={'pre_request': oauth_hook}
+            verify=self.verify_ssl, auth=oauth_hook
         )
         resp = dict(parse_qsl(req.text))
         
@@ -100,15 +101,15 @@ class ProjectJiraOauth(models.Model):
     def _do_oauth_leg_3(self, ):
         ''' Perform OAuth step 3 to get access_token and secret '''
         
-        oauth_hook = OAuthHook(
-            consumer_key=self.consumer_key, consumer_secret='',
-            access_token=self.request_token,
-            access_token_secret=self.request_secret,
-            key_cert=self.private_key, header_auth=True 
+        oauth_hook = OAuth1(
+            client_key=self.consumer_key, client_secret='',
+            signature_method=SIGNATURE_RSA, rsa_key=self.private_key,
+            resource_owner_key=self.request_token,
+            resource_owner_secret=self.request_secret,
         )
         req = requests.post(
             '%s/%s/access-token' % (self.uri, self.OAUTH_BASE),
-            hooks={'pre_request': oauth_hook}
+            verify=self.verify_ssl, auth=oauth_hook
         )
         resp = dict(parse_qsl(req.text))
         
