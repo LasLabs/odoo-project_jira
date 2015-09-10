@@ -47,7 +47,7 @@ class ProjectJiraOauthWizard(models.TransientModel):
     auth_uri = fields.Char(related='oauth_id.auth_uri')
     name = fields.Char()
     uri = fields.Char()
-    verify = fields.Boolean(string='Verify SSL?', default=True)
+    verify_ssl = fields.Boolean(string='Verify SSL?', default=True)
     
     @api.one
     def do_oauth_leg_1(self, ):
@@ -56,7 +56,7 @@ class ProjectJiraOauthWizard(models.TransientModel):
             'name': self.name,
             'uri': self.uri,
             'company_id': self.company_id.id,
-            'verify': self.verify
+            'verify_ssl': self.verify_ssl
         })
         
         self.write({
