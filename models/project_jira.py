@@ -54,7 +54,7 @@ class ProjectJiraOauth(models.Model):
     access_secret = fields.Char(readonly=True)
     
     company_id = fields.Many2one('res.company')
-    jira_project_ids = fields.Many2one('project.jira.project', 'jira_id')
+    jira_project_ids = fields.Many2one('project.jira.project')
     uri = fields.Char()
     
     @api.one
@@ -64,6 +64,7 @@ class ProjectJiraOauth(models.Model):
         self.public_key = private.publickey().exportKey()
         self.private_key = private.exportKey()
     
+    @api.one
     def _do_oauth_leg_1(self, ):
         ''' Perform OAuth step1 to get req_token, req_secret, and auth_uri '''
         
@@ -93,7 +94,8 @@ class ProjectJiraOauth(models.Model):
                 self.uri, self.OAUTH_BASE
             ),
         })
-        
+       
+    @api.one 
     def _do_oauth_leg_3(self, ):
         ''' Perform OAuth step 3 to get access_token and secret '''
         
@@ -143,7 +145,7 @@ class ProjectJiraProject(models.Model):
 
 class ProjectProject(models.Model):
     _inherit = 'project.project'
-    jira_project_id = fields.Many2one('project.jira.project', 'project_ids')
+    jira_project_id = fields.Many2one('project.jira.project')
 
 # 
 # class ProjectTask(models.Model):
@@ -152,4 +154,4 @@ class ProjectProject(models.Model):
 
 class ResCompany(models.Model):
     _inherit = 'res.company'
-    jira_oauth_ids = fields.One2many('project.jira.oauth')
+    jira_oauth_ids = fields.One2many('project.jira.oauth', 'company_id')
