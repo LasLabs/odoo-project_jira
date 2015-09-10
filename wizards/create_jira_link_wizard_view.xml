@@ -20,6 +20,7 @@
                 <group states='new'>
                     <field name='name' string='Name of instance'/>
                     <field name='uri' string='Base URI of JIRA Instance (e.g. https://example.com/jira)'/>
+                    <field name='verify_ssl' string='Verify SSL?'/>
                 </group>
                 <group states='leg_2'>
                     <field name='auth_uri' string='Visit This URI, Authorize, Then Click Continue' readonly='True'/>
