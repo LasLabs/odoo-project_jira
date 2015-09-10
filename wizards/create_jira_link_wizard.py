@@ -23,6 +23,10 @@ from os import urandom
 from Crypto.PublicKey import RSA
 from urlparse import parse_qsl
 import requests
+import logging
+
+
+_logger = logging.getLogger(__name__)
 
 
 class ProjectJiraOauthWizard(models.TransientModel):
@@ -41,43 +45,69 @@ class ProjectJiraOauthWizard(models.TransientModel):
                                  default=_compute_default_session)
     state = fields.Selection([
         ('new', 'New Creation'),
-        ('leg_2', 'OAuth Authorization'),
+        ('leg_1', 'OAuth Remote Config'),
+        ('leg_2', 'OAuth Remote Auth'),
         ('done', 'Complete')
     ], default='new')
     auth_uri = fields.Char(related='oauth_id.auth_uri')
     name = fields.Char()
     uri = fields.Char()
     verify_ssl = fields.Boolean(string='Verify SSL?', default=True)
+    consumer_key = fields.Char(related='oauth_id.consumer_key')
+    public_key = fields.Text(related='oauth_id.public_key')
     
-    @api.one
-    def do_oauth_leg_1(self, ):
+    @api.model
+    def __get_action(self, ):
+        act = self.env['ir.actions.act_window'].for_xml_id(
+            'project_jira', 'project_jira_oauth_launch_wizard'
+        )
+        act['res_id'] = self.id
+        return act
+    
+    @api.multi
+    def do_oauth_initial(self, ):
         ''' '''
-        oauth_id = self.env['project.jira.oauth'].create({
+        vals = {
             'name': self.name,
             'uri': self.uri,
-            'company_id': self.company_id.id,
+            'company_id': self._context.get('active_id'),
             'verify_ssl': self.verify_ssl
+        }
+        _logger.info('Creating oAuth with vals %s', vals)
+        oauth_id = self.env['project.jira.oauth'].create(vals)
+        oauth_id.create_rsa_key_vals() #< Gen new keypairs
+        
+        _logger.info('Initial keys created for %s, writing state leg_1',
+                      oauth_id)
+        self.write({
+            'state': 'leg_1',
+            'oauth_id': oauth_id.id,
         })
         
+        # view = {
+        #     'views': [[False, 'form']],
+        #     'src_model': 'res.company',
+        #     'res_model': 'project.jira.oauth.wizard',
+        #     'res_id': self.id,
+        #     'type': 'ir.actions.act_window',
+        #     'target': 'new',
+        # }
+        # 
+        # _logger.debug('Returning view %s', view)
+        return self.with_context(self._context).__get_action()
+    
+    @api.multi
+    def do_oauth_leg_1(self, ):
+        ''' '''
+        self.oauth_id._do_oauth_leg_1()
         self.write({
             'state': 'leg_2',
-            'oauth_id': oauth_id,
         })
-            
-        return {
-            'view_type': 'form',
-            'view_mode': 'form',
-            'views': [(False, 'form')],
-            'res_model': 'project.jira.oauth.wizard',
-            'res_id': self.id,
-            'type': 'ir.actions.act_window',
-            'target': 'new',
-            'context': self._context,
-        }
-    
-    @api.one
+        return self.with_context(self._context).__get_action()
+        
+    @api.multi
     def do_oauth_leg_3(self, ):
         ''' '''
         self.oauth_id._do_oauth_leg_3()
         self.state = 'done'
-        return {'type': 'ir.actions.act_window_close'}
+        return self.with_context(self._context).__get_action()

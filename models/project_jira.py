@@ -33,19 +33,19 @@ class ProjectJiraOauth(models.Model):
     _description = 'Handles OAuth Logic For Jira Project'
     
     RSA_BITS = 4096
-    KEY_LEN = 256
+    KEY_LEN = 255 #< 255 == max Atlassian db col len
     OAUTH_BASE = 'plugins/servlet/oauth'
     REST_VER = '2'
     REST_BASE = 'rest/api'
     
     def __compute_default_consumer_key_val(self, ):
         ''' Generate a rnd consumer key of length self.KEY_LEN '''
-        return urandom(self.KEY_LEN).encode('hex')
+        return urandom(self.KEY_LEN).encode('hex')[:self.KEY_LEN]
 
     consumer_key = fields.Char(default=__compute_default_consumer_key_val,
                                readonly=True)
-    private_key = fields.Char(readonly=True)
-    public_key = fields.Char(readonly=True)
+    private_key = fields.Text(readonly=True)
+    public_key = fields.Text(readonly=True)
     
     request_token = fields.Char(readonly=True)
     request_secret = fields.Char(readonly=True)
@@ -61,7 +61,7 @@ class ProjectJiraOauth(models.Model):
     verify_ssl = fields.Boolean(default=True)
     
     @api.one
-    def __create_rsa_key_vals(self, ):
+    def create_rsa_key_vals(self, ):
         ''' Create public/private RSA keypair   '''
         private = RSA.generate(self.RSA_BITS)
         self.public_key = private.publickey().exportKey()
@@ -71,7 +71,6 @@ class ProjectJiraOauth(models.Model):
     def _do_oauth_leg_1(self, ):
         ''' Perform OAuth step1 to get req_token, req_secret, and auth_uri '''
         
-        self.__create_rsa_key_vals() #< Gen new keypairs
         oauth_hook = OAuth1(
             client_key=self.consumer_key, client_secret='',
             signature_method=SIGNATURE_RSA, rsa_key=self.private_key,
@@ -93,7 +92,7 @@ class ProjectJiraOauth(models.Model):
             'request_token': token,
             'request_secret': secret,
             'auth_uri': '%s/%s/authorize?oauth_token=%s' % (
-                self.uri, self.OAUTH_BASE
+                self.uri, self.OAUTH_BASE, token
             ),
         })
        
@@ -124,19 +123,6 @@ class ProjectJiraOauth(models.Model):
             'access_token': token,
             'access_secret': secret,
         })
-        
-    @api.model
-    def create(self, vals):
-        ''' Hook into create, start oauth process & validate '''
-        rec = super(ProjectJiraOauth, self).create(vals)
-        rec._do_oauth_leg_1()
-        
-    @api.one
-    def write(self, vals):
-        ''' Hook into write, update oauth on URI change '''
-        super(ProjectJiraOauth, self).write(vals)
-        if vals.get('uri'):
-            self._do_oauth_leg_1()
             
             
 class ProjectJiraProject(models.Model):

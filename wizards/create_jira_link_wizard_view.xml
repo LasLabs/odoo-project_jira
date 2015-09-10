@@ -11,32 +11,46 @@
 
     <record model="ir.ui.view" id='project_jira_oauth_create_wizard'>
         <field name='name'>create.jira.oauth.wizard</field>
-        <field name='model'>project.jira.oauth.wizard</field>
+        <field name='res_model'>project.jira.oauth.wizard</field>
         <field name='arch' type='xml'>
             <form string='Create OAuth Connection'>
                 
                 <field invisible='1' name='state'/>
                 
+                <!--    Initial Create  -->
                 <group states='new'>
                     <field name='name' string='Name of instance'/>
                     <field name='uri' string='Base URI of JIRA Instance (e.g. https://example.com/jira)'/>
                     <field name='verify_ssl' string='Verify SSL?'/>
                 </group>
-                <group states='leg_2'>
-                    <field name='auth_uri' string='Visit This URI, Authorize, Then Click Continue' readonly='True'/>
-                </group>
-                <group states='done'>
-                    <h2>OAuth has already been configured.</h2>
-                </group>
-                
                 <footer states='new'>
                     <button special='cancel' string='Cancel'/>
-                    <button name='do_oauth_leg_1' type='object' string='Create' class='oe_highlight'/>
+                    <button name='do_oauth_initial' type='object' string='Create' class='oe_highlight'/>
                 </footer>
+                
+                <!--    Leg 1   -->
+                <group states='leg_1'>
+                    <field name='consumer_key' string='"Consumer Key" for JIRA Application Link'/>
+                    <field name='public_key' string='"Public Key" section for JIRA application link'/>
+                </group>
+                <footer states='leg_1'>
+                    <button special='cancel' string='Cancel'/>
+                    <button name='do_oauth_leg_1' type='object' string='Continue' class='oe_highlight'/>
+                </footer>
+                
+                <!-- Leg 2  -->
+                <group states='leg_2'>
+                    <field name='auth_uri' string='Visit This URI, Authorize, Then Click Continue'/>
+                </group>
                 <footer states='leg_2'>
                     <button special='cancel' string='Cancel'/>
                     <button name='do_oauth_leg_3' type='object' string='Continue (Only After Above Authorization)' class='oe_highlight'/>
                 </footer>
+                
+                <!--    Done    -->
+                <group states='done'>
+                    <h2>OAuth configuration complete</h2>
+                </group>
                 
             </form>
         </field>
@@ -47,6 +61,7 @@
                 src_model='res.company'
                 res_model='project.jira.oauth.wizard'
                 view_mode='form'
+                view_type='form'
                 target='new'
                 key2='client_action_multi'/>
 
