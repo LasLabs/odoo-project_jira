@@ -19,15 +19,18 @@
 #
 ##############################################################################
 from openerp import models, fields, api
-from os import urandom
-from oauthlib.oauth1 import SIGNATURE_RSA
-from requests_oauthlib import OAuth1
-from Crypto.PublicKey import RSA
-from urlparse import parse_qsl
-import requests
 
             
 class ProjectJiraProject(models.Model):
+    '''
+        @TODO
+    '''
     _name = 'project.jira.project'
-    jira_id = fields.One2many('project.jira.oauth', 'jira_project_ids')
+    _description = 'Project methods and data specific to JIRA'
+    
+    jira_oauth_id = fields.One2many('project.jira.oauth', 'jira_project_ids',
+                              required=True)
     project_ids = fields.One2many('project.project', 'jira_project_id')
+    
+    key = fields.Char(string='JIRA Project Key', required=True)
+    name = fields.Char(string='JIRA Project Name', required=True)
