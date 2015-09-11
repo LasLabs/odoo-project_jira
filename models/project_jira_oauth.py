@@ -61,14 +61,14 @@ class ProjectJiraOauth(models.Model):
     name = fields.Char()
     verify_ssl = fields.Boolean(default=True)
     
-    _session = None
+    __session = None
     
-    def _get_session(self, ):
+    def get_session(self, ):
         ''' Return JIRA session, create if one isn't established
             @return jira.JIRA
         '''
         
-        if self._session is None:
+        if self.__session is None:
             
             oauth = {
                 'access_token': self.jira_id.access_token,
@@ -81,9 +81,9 @@ class ProjectJiraOauth(models.Model):
                 'verify': self.jira_id.verify_ssl,
             }
             
-            self._session = JIRA(options, oauth=oauth)
+            self.__session = JIRA(options, oauth=oauth)
         
-        return self._session
+        return self.__session
 
     @api.one
     def create_rsa_key_vals(self, ):
@@ -155,7 +155,7 @@ class ProjectJiraOauth(models.Model):
             @TODO: abstract this, or move it to the project.jira.project model
         '''
         
-        jira_remote = self._get_session()
+        jira_remote = self.get_session()
         jira_projects = jira_remote.projects()
         jira_obj = self.env['project.jira.project']
         
