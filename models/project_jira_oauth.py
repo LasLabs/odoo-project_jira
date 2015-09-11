@@ -24,6 +24,7 @@ from oauthlib.oauth1 import SIGNATURE_RSA
 from requests_oauthlib import OAuth1
 from Crypto.PublicKey import RSA
 from urlparse import parse_qsl
+from jira import JIRA
 import requests
 
 
@@ -60,6 +61,30 @@ class ProjectJiraOauth(models.Model):
     name = fields.Char()
     verify_ssl = fields.Boolean(default=True)
     
+    _session = None
+    
+    def _get_session(self, ):
+        ''' Return JIRA session, create if one isn't established
+            @return jira.JIRA
+        '''
+        
+        if self._session is None:
+            
+            oauth = {
+                'access_token': self.jira_id.access_token,
+                'access_token_secret': self.jira_id.access_secret,
+                'consumer_key': self.jira_id.consumer_key,
+                'key_cert': self.jira_id.private_key,
+            }
+            options = {
+                'server': self.jira_id.uri,
+                'verify': self.jira_id.verify_ssl,
+            }
+            
+            self._session = JIRA(options, oauth=oauth)
+        
+        return self._session
+
     @api.one
     def create_rsa_key_vals(self, ):
         ''' Create public/private RSA keypair   '''
@@ -123,3 +148,26 @@ class ProjectJiraOauth(models.Model):
             'access_token': token,
             'access_secret': secret,
         })
+        
+    @api.model
+    def sync_remote_projects(self, ):
+        ''' Get projects from remote JIRA instance, create locally if unknown
+            @TODO: abstract this, or move it to the project.jira.project model
+        '''
+        
+        jira_remote = self._get_session()
+        jira_projects = jira_remote.projects()
+        jira_obj = self.env['project.jira.project']
+        
+        for jira_project in jira_projects:
+            
+            vals_project = {
+                'key': project.key,
+                'name': project.name,
+                'jira_oauth_id': self.id,
+            }
+            domain = [ (key, val) for key, val in vals_project.items() ]
+            existing_project = self.search(domain)
+            
+            if not existing_project:
+                existing_project = jira_obj.create(vals_project)
