@@ -18,19 +18,23 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from openerp import models, fields, api
+from openerp import models, fields
 
-            
+
 class ProjectJiraProject(models.Model):
     '''
         @TODO
     '''
     _name = 'project.jira.project'
     _description = 'Project methods and data specific to JIRA'
-    
+
     jira_oauth_id = fields.One2many('project.jira.oauth', 'jira_project_ids',
-                              required=True)
-    project_ids = fields.One2many('project.project', 'jira_project_id')
-    
-    key = fields.Char(string='JIRA Project Key', required=True)
-    name = fields.Char(string='JIRA Project Name', required=True)
+                                    required=True, readonly=True)
+    project_id = fields.One2many('project.project', 'jira_project_id')
+
+    key = fields.Char(
+        string='JIRA Project Key', required=True, readonly=True
+    )
+    name = fields.Char(
+        string='JIRA Project Name', required=True, readonly=True
+    )

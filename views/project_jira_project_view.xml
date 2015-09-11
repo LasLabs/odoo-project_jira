@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    Copyright (C) 2014-2015 LasLabs [https://laslabs.com]
+    @author Dave Lasley <dave@laslabs.com>
+    The licence is in the file __openerp__.py
+-->
+
+<openerp>
+<data>
+    
+    <record id="project_jira_project_view_form" model="ir.ui.view">
+        <field name="name">project.jira.project.view.form</field>
+        <field name="model">project.jira.project</field>
+        <field name="arch" type="xml">
+            <form string='JIRA Project'>
+                <field name='key'/>
+                <field name='name'/>
+                <field name='project_id' string='Linked Project'/>
+            </form>
+        </field>
+    </record>
+    
+    <record id="project_jira_project_view_tree" model="ir.ui.view">
+        <field name="name">project.jira.project.view.tree</field>
+        <field name="model">project.jira.project</field>
+        <field name="arch" type="xml">
+            <tree string='JIRA Projects'>
+                <field name='key'/>
+                <field name='name'/>
+                <field name='project_id' string='Linked Project'/>
+            </tree>
+        </field>
+    </record>
+    
+    <record id="project_jira_project_action" model="ir.actions.act_window">
+        <field name="name">project.jira.project.action</field>
+        <field name="res_model">project.jira.project</field>
+        <field name='view_type'>form</field>
+        <field name='view_mode'>tree,form</field>
+    </record>
+    
+    <menuitem id="project_jira_project_menu" parent="base.menu_definitions" 
+              groups="base.group_no_one" action="project_jira_project_action"
+              sequence="90" string='JIRA Links'/>
+    
+    <record id="project_project_view_form" model="ir.ui.view">
+        <field name="name">project.project.view.form</field>
+        <field name="model">project.project</field>
+        <field name='inherit_id' ref='project.edit_project'/>
+        <field name="arch" type="xml">
+            <xpath expr='//group[@name="group_alias"]' position='after'>
+                <group name='Connections'>
+                    <field name='jira_project_id' string='Linked JIRA Project'/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    
+</data>
+</openerp>

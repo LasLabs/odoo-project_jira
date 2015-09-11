@@ -11,7 +11,7 @@
 
     <record model="ir.ui.view" id='project_jira_oauth_create_wizard'>
         <field name='name'>create.jira.oauth.wizard</field>
-        <field name='res_model'>project.jira.oauth.wizard</field>
+        <field name='model'>project.jira.oauth.wizard</field>
         <field name='arch' type='xml'>
             <form string='Create OAuth Connection'>
                 
