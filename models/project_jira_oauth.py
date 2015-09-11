@@ -123,23 +123,3 @@ class ProjectJiraOauth(models.Model):
             'access_token': token,
             'access_secret': secret,
         })
-            
-            
-class ProjectJiraProject(models.Model):
-    _name = 'project.jira.project'
-    jira_id = fields.One2many('project.jira.oauth', 'jira_project_ids')
-    project_ids = fields.One2many('project.project', 'jira_project_id')
-
-
-class ProjectProject(models.Model):
-    _inherit = 'project.project'
-    jira_project_id = fields.Many2one('project.jira.project')
-
-# 
-# class ProjectTask(models.Model):
-#     _inherit = 'project.task'
-
-
-class ResCompany(models.Model):
-    _inherit = 'res.company'
-    jira_oauth_ids = fields.One2many('project.jira.oauth', 'company_id')

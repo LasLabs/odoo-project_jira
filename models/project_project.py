@@ -18,7 +18,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from project_jira.models import project_jira_oauth
-from project_jira.models import project_jira_project
-from project_jira.models import project_project
-from project_jira.models import res_company
+from openerp import models, fields, api
+
+
+class ProjectProject(models.Model):
+    _inherit = 'project.project'
+    jira_project_id = fields.Many2one('project.jira.project')

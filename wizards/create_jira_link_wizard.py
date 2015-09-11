@@ -23,10 +23,6 @@ from os import urandom
 from Crypto.PublicKey import RSA
 from urlparse import parse_qsl
 import requests
-import logging
-
-
-_logger = logging.getLogger(__name__)
 
 
 class ProjectJiraOauthWizard(models.TransientModel):
@@ -73,27 +69,14 @@ class ProjectJiraOauthWizard(models.TransientModel):
             'company_id': self._context.get('active_id'),
             'verify_ssl': self.verify_ssl
         }
-        _logger.info('Creating oAuth with vals %s', vals)
         oauth_id = self.env['project.jira.oauth'].create(vals)
         oauth_id.create_rsa_key_vals() #< Gen new keypairs
         
-        _logger.info('Initial keys created for %s, writing state leg_1',
-                      oauth_id)
         self.write({
             'state': 'leg_1',
             'oauth_id': oauth_id.id,
         })
         
-        # view = {
-        #     'views': [[False, 'form']],
-        #     'src_model': 'res.company',
-        #     'res_model': 'project.jira.oauth.wizard',
-        #     'res_id': self.id,
-        #     'type': 'ir.actions.act_window',
-        #     'target': 'new',
-        # }
-        # 
-        # _logger.debug('Returning view %s', view)
         return self.with_context(self._context).__get_action()
     
     @api.multi

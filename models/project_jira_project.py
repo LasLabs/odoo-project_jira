@@ -18,7 +18,16 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from project_jira.models import project_jira_oauth
-from project_jira.models import project_jira_project
-from project_jira.models import project_project
-from project_jira.models import res_company
+from openerp import models, fields, api
+from os import urandom
+from oauthlib.oauth1 import SIGNATURE_RSA
+from requests_oauthlib import OAuth1
+from Crypto.PublicKey import RSA
+from urlparse import parse_qsl
+import requests
+
+            
+class ProjectJiraProject(models.Model):
+    _name = 'project.jira.project'
+    jira_id = fields.One2many('project.jira.oauth', 'jira_project_ids')
+    project_ids = fields.One2many('project.project', 'jira_project_id')
