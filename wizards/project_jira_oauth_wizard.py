@@ -19,23 +19,19 @@
 #
 ##############################################################################
 from openerp import models, fields, api
-from os import urandom
-from Crypto.PublicKey import RSA
-from urlparse import parse_qsl
-import requests
 
 
 class ProjectJiraOauthWizard(models.TransientModel):
     ''' Handle OAuth for Jira '''
     _name = 'project.jira.oauth.wizard'
     _description = 'Wizard to create connection and perform Oauth dance'
-    
+
     def _compute_default_session(self, ):
         return self.env['res.company'].browse(self._context.get('active_id'))
-    
+
     def _compute_default_auth_uri(self, ):
         return self.oauth_id.auth_uri
-    
+
     oauth_id = fields.Many2one('project.jira.oauth')
     company_id = fields.Many2one('res.company',
                                  default=_compute_default_session)
@@ -51,7 +47,7 @@ class ProjectJiraOauthWizard(models.TransientModel):
     verify_ssl = fields.Boolean(string='Verify SSL?', default=True)
     consumer_key = fields.Char(related='oauth_id.consumer_key')
     public_key = fields.Text(related='oauth_id.public_key')
-    
+
     @api.model
     def __get_action(self, ):
         act = self.env['ir.actions.act_window'].for_xml_id(
@@ -59,7 +55,7 @@ class ProjectJiraOauthWizard(models.TransientModel):
         )
         act['res_id'] = self.id
         return act
-    
+
     @api.multi
     def do_oauth_initial(self, ):
         ''' '''
@@ -70,15 +66,15 @@ class ProjectJiraOauthWizard(models.TransientModel):
             'verify_ssl': self.verify_ssl
         }
         oauth_id = self.env['project.jira.oauth'].create(vals)
-        oauth_id.create_rsa_key_vals() #< Gen new keypairs
-        
+        oauth_id.create_rsa_key_vals()  # Gen new keypairs
+
         self.write({
             'state': 'leg_1',
             'oauth_id': oauth_id.id,
         })
-        
+
         return self.with_context(self._context).__get_action()
-    
+
     @api.multi
     def do_oauth_leg_1(self, ):
         ''' '''
@@ -87,7 +83,7 @@ class ProjectJiraOauthWizard(models.TransientModel):
             'state': 'leg_2',
         })
         return self.with_context(self._context).__get_action()
-        
+
     @api.multi
     def do_oauth_leg_3(self, ):
         ''' '''

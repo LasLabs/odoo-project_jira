@@ -20,7 +20,7 @@
 ##############################################################################
 {
     'name': 'Sync Module for Jira',
-    'version': '0.1',
+    'version': '8.0.0.1',
     'category': '',
     'author': "LasLabs",
     'license': 'AGPL-3',
@@ -30,8 +30,9 @@
         'project_issue',
     ],
     'data': [
-        'views/project_jira_view.xml',
-        'wizards/create_jira_link_wizard_view.xml',
+        'views/res_company_view.xml',
+        'views/project_jira_project_view.xml',
+        'wizards/project_jira_oauth_wizard_view.xml',
     ],
     'installable': True,
     'application': True,

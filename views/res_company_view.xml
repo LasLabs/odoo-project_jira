@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    Copyright (C) 2014-2015 LasLabs [https://laslabs.com]
+    @author Dave Lasley <dave@laslabs.com>
+    The licence is in the file __openerp__.py
+-->
+
+<openerp>
+<data>
+    
+    <record id="res_company_project_jira_view_form" model="ir.ui.view">
+        <field name="name">project.jira.view.form</field>
+        <field name="model">res.company</field>
+        <field name='inherit_id' ref='base.view_company_form'/>
+        <field name="arch" type="xml">
+            <xpath expr='//group[@string="Bank Accounts"]' position='after'>
+                <group string='Jira Connections'>
+                    <field name="jira_oauth_ids" nolabel="1" context="{'default_company_id': active_id, 'footer_hide': True}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    
+</data>
+</openerp>
