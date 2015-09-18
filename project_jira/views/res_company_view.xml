@@ -16,7 +16,7 @@
         <field name="arch" type="xml">
             <xpath expr='//group[@string="Bank Accounts"]' position='after'>
                 <group string='Jira Connections'>
-                    <field name="jira_oauth_ids" nolabel="1" context="{'default_company_id': active_id, 'footer_hide': True}"/>
+                    <field name="oauth_ids" nolabel="1" context="{'default_company_id': active_id, 'footer_hide': True}"/>
                 </group>
             </xpath>
         </field>

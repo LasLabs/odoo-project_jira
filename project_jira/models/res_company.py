@@ -21,20 +21,6 @@
 from openerp import models, fields
 
 
-class ProjectJiraProject(models.Model):
-    '''
-        @TODO
-    '''
-    _name = 'project.jira.project'
-    _description = 'Project methods and data specific to JIRA'
-
-    jira_oauth_id = fields.One2many('project.jira.oauth', 'jira_project_ids',
-                                    required=True, readonly=True)
-    project_id = fields.One2many('project.project', 'jira_project_id')
-
-    key = fields.Char(
-        string='JIRA Project Key', required=True, readonly=True
-    )
-    name = fields.Char(
-        string='JIRA Project Name', required=True, readonly=True
-    )
+class ResCompany(models.Model):
+    _inherit = 'res.company'
+    oauth_ids = fields.One2many('project.jira.oauth', 'company_id')

@@ -18,9 +18,5 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from openerp import models, fields
-
-
-class ResCompany(models.Model):
-    _inherit = 'res.company'
-    jira_oauth_ids = fields.One2many('project.jira.oauth', 'company_id')
+from . import models
+from . import wizards

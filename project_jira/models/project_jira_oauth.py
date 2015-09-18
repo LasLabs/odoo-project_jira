@@ -148,27 +148,3 @@ class ProjectJiraOauth(models.Model):
             'access_token': token,
             'access_secret': secret,
         })
-
-    @api.model
-    def sync_remote_projects(self, domain=[]):
-        ''' Get projects from remote JIRA instance, create locally if unknown
-            @TODO: abstract this, or move it to the project.jira.project model
-        '''
-        
-        jira_obj = self.env['project.jira.project']
-        
-        for oauth_connection in self.search(domain):
-            jira_projects = oauth_connection.client.projects()
-
-            for jira_project in jira_projects:
-
-                vals_project = {
-                    'key': jira_project.key,
-                    'name': jira_project.name,
-                    'jira_oauth_id': self.id,
-                }
-                domain = [(key, '=', val) for key, val in vals_project.items()]
-                existing_project = jira_obj.search(domain)
-    
-                if not existing_project:
-                    existing_project = jira_obj.create(vals_project)
