@@ -23,15 +23,50 @@ from os import urandom
 from oauthlib.oauth1 import SIGNATURE_RSA
 from requests_oauthlib import OAuth1
 from Crypto.PublicKey import RSA
-from urlparse import parse_qsl
 from jira import JIRA
+from urlparse import parse_qsl
 import requests
+import openerp.addons.connector.backend as backend
 
 
-class ProjectJiraOauth(models.Model):
+jira = backend.Backend('jira')
+""" Generic Jira Backend """
+
+jira2 = backend.Backend(parent=jira, version='2')
+""" Jira Backend for Api Version 2 """
+
+
+class JiraSession(OAuth1Session):
+    ''' Inherit Oauth1Session for more convenient API usage '''
+
+    def __init__(self, api_uri, private_key, *args, **kwargs):
+        super(JiraSession, self).__init__(private_key, *args, **kwargs)
+        self.uri = uri
+
+    def get(self, api_path, *args, **kwargs):
+        if isinstance(api_path, list):
+            api_path = '/'.join(api_path)
+        uri = '%s/%s/' % (self.uri, api_path)
+        resp = super(JiraSession, self).get(uri, *args, **kwargs)
+        #   @TODO: Error handling
+        return resp.json()
+    
+    def post(self, api_path, post_data, *args, **kwargs):
+        if isinstance(api_path, list):
+            api_path = '/'.join(api_path)
+        uri = '%s/%s/' % (self.uri, api_path)
+        resp = super(JiraSession, self).post(uri, post_data, *args, **kwargs)
+        #   @TODO: Error handling
+        return resp.json()
+
+
+class JiraBackend(models.Model):
     ''' Handle OAuth for Jira '''
-    _name = 'project.jira.oauth'
+    _name = 'jira.backend'
     _description = 'Handles OAuth Logic For Jira Project'
+    _inherit = 'connector.backend'
+
+    _backend_type = 'jira'
 
     RSA_BITS = 4096
     KEY_LEN = 255   # 255 == max Atlassian db col len
@@ -79,11 +114,23 @@ class ProjectJiraOauth(models.Model):
     company_id = fields.Many2one('res.company')
     jira_project_ids = fields.Many2one('project.jira.project')
     uri = fields.Char()
+    location = fields.Char(related='uri')  #  < @TODO: GET RID OF THIS!
     name = fields.Char()
     verify_ssl = fields.Boolean(default=True)
     client = fields.Binary(compute='_compute_oauth_client',
                            readonly=True, store=False)
+    default_lang_id = fields.Many2one(
+        comodel_name='res.lang',
+        string='Default Language',
+    )
 
+    @api.model
+    def _select_versions(self):
+        """ Available versions
+
+        Can be inherited to add custom versions.
+        """
+        return [('2', 'API Version 2'),]
 
     @api.one
     def create_rsa_key_vals(self, ):

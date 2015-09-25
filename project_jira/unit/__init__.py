@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    Author: Dave Lasley <dave@laslabs.com>
-#    Copyright: 2015 LasLabs, Inc [https://laslabs.com]
+#    Copyright: 2015 LasLabs, Inc.
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -18,23 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-{
-    'name': 'JIRA Connector',
-    'version': '8.0.0.1',
-    'category': 'Connector',
-    'author': "LasLabs",
-    'license': 'AGPL-3',
-    'website': 'https://laslabs.com',
-    'depends': [
-        'connector',
-        'project',
-        'project_issue',
-    ],
-    'data': [
-        'views/res_company_view.xml',
-        'views/project_jira_project_view.xml',
-        'wizards/project_jira_oauth_wizard_view.xml',
-    ],
-    'installable': True,
-    'application': False,
-}
+
+
+from . import models
+from . import wizards
